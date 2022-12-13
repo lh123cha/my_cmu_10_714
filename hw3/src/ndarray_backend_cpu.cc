@@ -22,6 +22,9 @@ const size_t ELEM_SIZE = sizeof(scalar_t);
  */
 struct AlignedArray {
   AlignedArray(const size_t size) {
+    //posix_memalign提供自定义大小的对齐缓存块
+    //调用posix_memalign( )成功时会返回size字节的动态内存，并且这块内存的地址是alignment的倍数。
+    //参数alignment必须是2的幂，还是void指针的大小的倍数。返回的内存块的地址放在了memptr里面，函数返回值是0.
     int ret = posix_memalign((void**)&ptr, ALIGNMENT, size * ELEM_SIZE);
     if (ret != 0) throw std::bad_alloc();
     this->size = size;
@@ -44,7 +47,16 @@ void Fill(AlignedArray* out, scalar_t val) {
 }
 
 
+// void cycle(int nCount,std::vector<uint32_t> shape,std::vector<uint32_t> strides){
+//   nCount--;
+//   if(nCount==0){
+//     return;
+//   }
+//   for(int i=0;i<shape[nCount];i++){
+    
+//   }
 
+// }
 
 void Compact(const AlignedArray& a, AlignedArray* out, std::vector<uint32_t> shape,
              std::vector<uint32_t> strides, size_t offset) {
@@ -60,9 +72,33 @@ void Compact(const AlignedArray& a, AlignedArray* out, std::vector<uint32_t> sha
    *
    * Returns:
    *  void (you need to modify out directly, rather than returning anything; this is true for all the
-   *  function will implement here, so we won't repeat this note.)
+   *  function will implement here, so we won't repeab t this note.)
    */
   /// BEGIN YOUR SOLUTION
+  int dimensions = shape.size();
+  int cnt=0;
+  std::vector<uint32_t> indices(0,dimensions);
+  int total_num = 1;
+
+  int cur = 0;
+  for(indices[0]=0;cur>=0;){
+    ++indices[cur];
+    if(indices[cur]<=shape[cur]){
+      if(cur==dimensions-1){
+        int temp = 0;
+        for(int k=0;k<dimensions;k++){
+          temp+=strides[k]*(tab[k]-1);
+        }
+        out->ptr[cnt++] = a.ptr[temp];
+      }else{
+        ++cur;
+        tab[cur]=0;
+      }
+    }else{
+      --cur;
+    }
+    out->ptr[0]=a.ptr[0 + offset];
+  }
   
   /// END YOUR SOLUTION
 }
@@ -80,7 +116,7 @@ void EwiseSetitem(const AlignedArray& a, AlignedArray* out, std::vector<uint32_t
    *   offset: offset of the *out* array (not a, which has zero offset, being compact)
    */
   /// BEGIN YOUR SOLUTION
-  
+
   /// END YOUR SOLUTION
 }
 
@@ -292,22 +328,22 @@ PYBIND11_MODULE(ndarray_backend_cpu, m) {
   m.def("ewise_add", EwiseAdd);
   m.def("scalar_add", ScalarAdd);
 
-  // m.def("ewise_mul", EwiseMul);
-  // m.def("scalar_mul", ScalarMul);
-  // m.def("ewise_div", EwiseDiv);
-  // m.def("scalar_div", ScalarDiv);
-  // m.def("scalar_power", ScalarPower);
+  m.def("ewise_mul", EwiseMul);
+  m.def("scalar_mul", ScalarMul);
+  m.def("ewise_div", EwiseDiv);
+  m.def("scalar_div", ScalarDiv);
+  m.def("scalar_power", ScalarPower);
 
-  // m.def("ewise_maximum", EwiseMaximum);
-  // m.def("scalar_maximum", ScalarMaximum);
-  // m.def("ewise_eq", EwiseEq);
-  // m.def("scalar_eq", ScalarEq);
-  // m.def("ewise_ge", EwiseGe);
-  // m.def("scalar_ge", ScalarGe);
+  m.def("ewise_maximum", EwiseMaximum);
+  m.def("scalar_maximum", ScalarMaximum);
+  m.def("ewise_eq", EwiseEq);
+  m.def("scalar_eq", ScalarEq);
+  m.def("ewise_ge", EwiseGe);
+  m.def("scalar_ge", ScalarGe);
 
-  // m.def("ewise_log", EwiseLog);
-  // m.def("ewise_exp", EwiseExp);
-  // m.def("ewise_tanh", EwiseTanh);
+  m.def("ewise_log", EwiseLog);
+  m.def("ewise_exp", EwiseExp);
+  m.def("ewise_tanh", EwiseTanh);
 
   m.def("matmul", Matmul);
   m.def("matmul_tiled", MatmulTiled);

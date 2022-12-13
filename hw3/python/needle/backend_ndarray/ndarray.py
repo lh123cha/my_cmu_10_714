@@ -265,7 +265,9 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-
+        new_strides = (self.strides[x] for x in new_axes)
+        new_shape = (self.shape[x] for x in new_axes)
+        return self.as_strided(new_shape,new_strides)
         ### END YOUR SOLUTION
 
     def broadcast_to(self, new_shape):
@@ -286,7 +288,13 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        new_strides = list(self.strides)
+        for i in range(len(self.shape)):
+            if self.shape[i]!=1:
+                assert self.shape[i]==new_shape[i]
+            else:
+                new_strides[i]=0
+        return self.as_strided(new_shape,new_strides)
         ### END YOUR SOLUTION
 
     ### Get and set elements
@@ -349,7 +357,15 @@ class NDArray:
         assert len(idxs) == self.ndim, "Need indexes equal to number of dimensions"
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        print("idx:",idxs)
+        new_shape = list[self.shape]
+        new_strides = list[self.strides]
+        offsets = 0
+        for i,s in enumerate(idxs):
+            offsets +=s.start*self.strides[i]
+            new_shape[i] = (s.stop-s.start)/s.step
+            new_strides[i] = s.step*self.strides[i]
+        return self.make(new_shape,new_strides,self.device,self._handle,offsets)
         ### END YOUR SOLUTION
 
     def __setitem__(self, idxs, other):
@@ -550,7 +566,7 @@ def array(a, dtype="float32", device=None):
 
 def empty(shape, dtype="float32", device=None):
     device = device if device is not None else default_device()
-    return devie.empty(shape, dtype)
+    return device.empty(shape, dtype)
 
 
 def full(shape, fill_value, dtype="float32", device=None):
